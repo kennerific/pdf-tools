@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>PDF Cutter</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>PDF Cutter</h1>
+      <p class="muted">Split a PDF into page ranges. Files never leave your browser.</p>
+    </header>
+
+    <label id="drop" class="drop">
+      <input id="file" type="file" accept="application/pdf" hidden>
+      <span>Drop a PDF or <u>browse</u></span>
+    </label>
+
+    <section id="editor" hidden>
+      <div class="file">
+        <span id="file-name"></span>
+        <span id="file-pages" class="muted"></span>
+        <button id="change" class="link" type="button">Change</button>
+      </div>
+
+      <label class="offset">
+        <span>Page offset</span>
+        <input id="offset" type="number" min="0" value="0" inputmode="numeric">
+      </label>
+
+      <div class="head muted">
+        <span>Label</span><span>From</span><span>To</span><span></span>
+      </div>
+      <ol id="ranges"></ol>
+      <button id="add" class="link" type="button">+ Add range</button>
+
+      <button id="cut" class="primary" type="button" disabled>Cut</button>
+    </section>
+
+    <p id="status" class="muted" role="status"></p>
+  </main>
+
+  <template id="row">
+    <li>
+      <input name="label" type="text" placeholder="Optional" autocomplete="off">
+      <input name="from" type="number" min="1" inputmode="numeric">
+      <input name="to" type="number" min="1" inputmode="numeric">
+      <button class="remove" type="button" aria-label="Remove range">×</button>
+      <span class="resolved muted"></span>
+    </li>
+  </template>
+</body>
+</html>
