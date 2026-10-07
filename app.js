@@ -11,6 +11,7 @@ const ranges = $("ranges");
 const cutButton = $("cut");
 const status = $("status");
 const rowTemplate = $("row");
+const offsetInput = $("offset");
 
 let source = null;
 let baseName = "";
@@ -39,6 +40,7 @@ async function loadFile(file) {
   baseName = file.name.replace(/\.pdf$/i, "");
   $("file-name").textContent = file.name;
   $("file-pages").textContent = `${source.getPageCount()} pages`;
+  offsetInput.value = 0;
   ranges.replaceChildren();
   addRow();
   drop.hidden = true;
@@ -48,21 +50,25 @@ async function loadFile(file) {
 
 function addRow() {
   const row = rowTemplate.content.firstElementChild.cloneNode(true);
-  row.querySelectorAll("input[type=number]").forEach((input) => (input.max = source.getPageCount()));
   ranges.append(row);
   row.querySelector("[name=from]").focus();
   validate();
 }
 
-function readRows() {
-  const pageCount = source.getPageCount();
+function readOffset() {
+  const offset = Number(offsetInput.value);
+  return Number.isInteger(offset) && offset >= 0 && offset < source.getPageCount() ? offset : null;
+}
+
+function readRows(offset) {
+  const lastPage = source.getPageCount() - offset;
   return [...ranges.children].map((row) => {
     const fromInput = row.querySelector("[name=from]");
     const toInput = row.querySelector("[name=to]");
     const from = Number(fromInput.value);
     const to = Number(toInput.value);
-    const fromValid = Number.isInteger(from) && from >= 1 && from <= pageCount;
-    const toValid = Number.isInteger(to) && to >= 1 && to <= pageCount && (!fromValid || to >= from);
+    const fromValid = Number.isInteger(from) && from >= 1 && from <= lastPage;
+    const toValid = Number.isInteger(to) && to >= 1 && to <= lastPage && (!fromValid || to >= from);
     return {
       label: row.querySelector("[name=label]").value.trim(),
       from,
@@ -71,17 +77,22 @@ function readRows() {
       toInput,
       fromValid,
       toValid,
+      resolved: row.querySelector(".resolved"),
     };
   });
 }
 
 function validate() {
-  const rows = readRows();
+  const offset = readOffset();
+  offsetInput.setAttribute("aria-invalid", String(offset === null));
+  const rows = readRows(offset ?? 0);
   for (const row of rows) {
     row.fromInput.setAttribute("aria-invalid", String(row.fromInput.value !== "" && !row.fromValid));
     row.toInput.setAttribute("aria-invalid", String(row.toInput.value !== "" && !row.toValid));
+    const showResolved = offset > 0 && row.fromValid && row.toValid;
+    row.resolved.textContent = showResolved ? `→ ${row.from + offset}–${row.to + offset}` : "";
   }
-  cutButton.disabled = rows.length === 0 || !rows.every((row) => row.fromValid && row.toValid);
+  cutButton.disabled = offset === null || rows.length === 0 || !rows.every((row) => row.fromValid && row.toValid);
 }
 
 function fileNameFor(row) {
@@ -112,7 +123,8 @@ function download(bytes, name) {
 }
 
 async function cut() {
-  const rows = readRows();
+  const offset = readOffset();
+  const rows = readRows(offset);
   const files = {};
   const taken = new Set();
   cutButton.disabled = true;
@@ -120,7 +132,7 @@ async function cut() {
   try {
     for (const [i, row] of rows.entries()) {
       setStatus(`Cutting ${i + 1} of ${rows.length}…`);
-      files[uniqueName(fileNameFor(row), taken)] = await extract(row.from, row.to);
+      files[uniqueName(fileNameFor(row), taken)] = await extract(row.from + offset, row.to + offset);
     }
     download(zipSync(files, { level: 0 }), `${baseName}_cuts.zip`);
     setStatus(`Done. ${rows.length} ${rows.length === 1 ? "file" : "files"} saved.`);
@@ -163,6 +175,7 @@ ranges.addEventListener("click", (event) => {
   validate();
 });
 
+offsetInput.addEventListener("input", validate);
 $("add").addEventListener("click", addRow);
 $("change").addEventListener("click", reset);
 cutButton.addEventListener("click", cut);

@@ -6,6 +6,7 @@ Split a PDF into page ranges, entirely in the browser. Each range becomes its ow
 
 1. Drop or browse for a PDF.
 2. Add ranges (e.g. 12–15, 15–37, 90–100). Labels are optional and become file names.
+   Optionally set a page offset to map printed page numbers to PDF pages (offset 73: typed 100–110 cuts PDF pages 173–183).
 3. Click **Cut**.
 
 Password-protected PDFs are not supported.

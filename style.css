@@ -88,6 +88,23 @@ header p { margin: 4px 0 0; }
 
 .head { font-size: 12px; margin-bottom: 6px; }
 
+.offset {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.offset input { width: 72px; }
+
+.resolved {
+  grid-column: 2 / 4;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.resolved:empty { display: none; }
+
 #ranges {
   list-style: none;
   margin: 0;
